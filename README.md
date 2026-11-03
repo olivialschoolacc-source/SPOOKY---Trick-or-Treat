@@ -1,1 +1,1 @@
-# SPOOKY---Trick-or-Treat
+# SPOOKY-Trick or Treat
