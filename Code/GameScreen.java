@@ -2,24 +2,74 @@ package Code;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.util.Map;
 import javax.swing.*;
 
 public class GameScreen {
     
     public static JPanel inGameMenuOverlay;
+    public static int houseIndex = 1;
+    public static int candyCount = 0;
+    public static JPanel gamePanel;
+    public static JLabel narrativeLabel;
+    public static JLabel statsLabel;
 
     public static void startInGame() {
         Main.layeredPane.removeAll();
+        houseIndex = 1;
+        candyCount = 0;
 
-        JPanel gamePanel = new JPanel();
+        gamePanel = new JPanel();
         gamePanel.setBounds(0, 0, 800, 600);
         gamePanel.setLayout(null);
+        gamePanel.setBackground(new Color(20, 15, 25));
 
-        JLabel gameLabel = new JLabel("In Game Page");
-        gameLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        gameLabel.setBounds(150, 250, 500, 50);
-        gamePanel.add(gameLabel);
+        JLabel titleLabel = new JLabel("NEIGHBORHOOD STREET - HOUSE " + houseIndex + " OF 4", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Monospaced", Font.BOLD, 20));
+        titleLabel.setForeground(new Color(255, 100, 100));
+        titleLabel.setBounds(150, 25, 500, 40);
+        gamePanel.add(titleLabel);
+
+        statsLabel = new JLabel("Candy Collected: " + candyCount, SwingConstants.CENTER);
+        statsLabel.setFont(new Font("Monospaced", Font.BOLD, 14));
+        statsLabel.setForeground(new Color(100, 255, 100));
+        statsLabel.setBounds(150, 70, 500, 30);
+        gamePanel.add(statsLabel);
+
+        JPanel houseVisualBox = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setColor(new Color(40, 30, 50));
+                g2d.fillRect(200, 50, 200, 180);
+                g2d.setColor(new Color(255, 200, 100));
+                g2d.fillRect(275, 130, 50, 100);
+                g2d.setColor(new Color(230, 110, 30));
+                g2d.fillOval(285, 160, 15, 15);
+            }
+        };
+        houseVisualBox.setBounds(100, 120, 600, 250);
+        houseVisualBox.setOpaque(false);
+        gamePanel.add(houseVisualBox);
+
+        narrativeLabel = new JLabel("You approach a dimly lit porch. The Jack-o'-lantern flickers.", SwingConstants.CENTER);
+        narrativeLabel.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        narrativeLabel.setForeground(Color.LIGHT_GRAY);
+        narrativeLabel.setBounds(100, 390, 600, 40);
+        gamePanel.add(narrativeLabel);
+
+        JButton actionButton1 = new JButton("KNOCK ON DOOR");
+        actionButton1.setBounds(200, 460, 180, 45);
+        actionButton1.setFont(new Font("Monospaced", Font.BOLD, 12));
+        actionButton1.addActionListener(e -> processHouseInteraction(true));
+        gamePanel.add(actionButton1);
+
+        JButton actionButton2 = new JButton("SNOOP AROUND BACK");
+        actionButton2.setBounds(420, 460, 180, 45);
+        actionButton2.setFont(new Font("Monospaced", Font.BOLD, 12));
+        actionButton2.addActionListener(e -> processHouseInteraction(false));
+        gamePanel.add(actionButton2);
 
         JButton menuButton = new JButton("MENU");
         menuButton.setBounds(10, 10, 90, 30);
@@ -29,6 +79,59 @@ public class GameScreen {
         Main.layeredPane.add(gamePanel, JLayeredPane.DEFAULT_LAYER);
         Main.layeredPane.revalidate();
         Main.layeredPane.repaint();
+    }
+
+    public static void processHouseInteraction(boolean knocked) {
+        boolean hasFlashlight = false;
+        boolean hasSneakers = false;
+
+        for (Map.Entry<DressItem.Layer, DressItem> entry : DressUpScreen.equippedItems.entrySet()) {
+            String name = entry.getValue().getName();
+            if (name.contains("Flashlight")) hasFlashlight = true;
+            if (name.contains("Sneakers")) hasSneakers = true;
+        }
+
+        if (houseIndex == 1) {
+            candyCount += 5;
+            narrativeLabel.setText("Friendly neighbor gives you a handful of king-size bars! (+5 Candy)");
+        } else if (houseIndex == 2) {
+            if (hasFlashlight) {
+                candyCount += 8;
+                narrativeLabel.setText("Your flashlight exposes a hidden candy stash in the bushes! (+8 Candy)");
+            } else {
+                candyCount += 3;
+                narrativeLabel.setText("Dark porch. You stumble around but find a few sweets. (+3 Candy)");
+            }
+        } else if (houseIndex == 3) {
+            if (knocked) {
+                narrativeLabel.setText("A creepy figure answers! You quickly back away safely.");
+            } else {
+                if (hasSneakers) {
+                    candyCount += 12;
+                    narrativeLabel.setText("You quietly sneak around and score the secret candy bowl! (+12 Candy)");
+                } else {
+                    candyCount -= 5;
+                    narrativeLabel.setText("Your noisy shoes alert the owner! You drop some candy (-5 Candy)");
+                }
+            }
+        } else if (houseIndex == 4) {
+            JOptionPane.showMessageDialog(Main.frame, "You survived Halloween night with " + candyCount + " candies! Returning to Wardrobe.");
+            DressUpScreen.startDressUpScene();
+            return;
+        }
+
+        houseIndex++;
+        statsLabel.setText("Candy Collected: " + candyCount);
+        if (houseIndex <= 4) {
+            Timer t = new Timer(1500, ev -> {
+                ((Timer)ev.getSource()).stop();
+                if (narrativeLabel != null) {
+                    narrativeLabel.setText("House " + houseIndex + ": Standing before the next creaky porch...");
+                }
+            });
+            t.setRepeats(false);
+            t.start();
+        }
     }
 
     public static void showInGameMenu() {
@@ -46,7 +149,7 @@ public class GameScreen {
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
-        inGameMenuOverlay.setBounds(0,0,800,600);
+        inGameMenuOverlay.setBounds(0, 0, 800, 600);
         inGameMenuOverlay.setLayout(null);
         inGameMenuOverlay.setOpaque(false);
         inGameMenuOverlay.addMouseListener(new MouseAdapter() {});
@@ -123,7 +226,7 @@ public class GameScreen {
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
-        inGameMenuOverlay.setBounds(0,0,800,600);
+        inGameMenuOverlay.setBounds(0, 0, 800, 600);
         inGameMenuOverlay.setLayout(null);
         inGameMenuOverlay.setOpaque(false);
         inGameMenuOverlay.addMouseListener(new MouseAdapter() {});
@@ -181,12 +284,10 @@ public class GameScreen {
 
             slotPanel.addMouseListener(new MouseAdapter() {
                 @Override
-                public void mouseClicked(MouseEvent evt) {
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
                     if (GameState.saveSlots[slotIndex]) {
-                        // Overwrite confirmation prompt
                         MainMenu.showOverwriteConfirmation(slotIndex, popupBox, false);
                     } else {
-                        // New save in empty slot
                         GameState.createNewGameInSlot(slotIndex);
                         Main.layeredPane.remove(inGameMenuOverlay);
                         inGameMenuOverlay = null;

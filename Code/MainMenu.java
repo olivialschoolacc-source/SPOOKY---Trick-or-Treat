@@ -6,7 +6,6 @@ import java.awt.event.MouseEvent;
 import javax.swing.*;
 
 public class MainMenu {
-    
     public static JPanel menuPanel;
     public static JPanel popupOverlay;
     public static JPanel subPopupOverlay;
@@ -110,7 +109,7 @@ public class MainMenu {
                 slotPanel.setBackground(new Color(30, 25, 30));
                 slotPanel.setBorder(BorderFactory.createLineBorder(new Color(100, 90, 100), 2));
 
-                JLabel slotNum = new JLabel();
+                JLabel slotNum = new JLabel("SLOT " + (slotIndex + 1));
                 slotNum.setForeground(Color.WHITE);
                 slotNum.setFont(new Font("Monospaced", Font.BOLD, 14));
                 slotNum.setBounds(20, 25, 80, 20);
@@ -148,9 +147,10 @@ public class MainMenu {
                             }
                         } else {
                             if (GameState.saveSlots[slotIndex]) {
+                                GameState.loadSlotOutfit(slotIndex);
                                 Main.layeredPane.remove(popupOverlay);
                                 popupOverlay = null;
-                                GameScreen.startInGame();
+                                DressUpScreen.startDressUpScene();
                             }
                         }
                     }
@@ -206,8 +206,16 @@ public class MainMenu {
                 createNewGameInSlotFlow(slotIndex, popupBox);
             } else {
                 GameState.createNewGameInSlot(slotIndex);
-                Main.layeredPane.remove(popupOverlay);
-                popupOverlay = null;
+
+                if (popupOverlay != null) {
+                    Main.layeredPane.remove(popupOverlay);
+                    popupOverlay = null;
+                }
+                if (GameScreen.inGameMenuOverlay != null) {
+                    Main.layeredPane.remove(GameScreen.inGameMenuOverlay);
+                    GameScreen.inGameMenuOverlay = null;
+                }
+                
                 Main.layeredPane.revalidate();
                 Main.layeredPane.repaint();
                 GameScreen.showInGameMenu();
@@ -242,7 +250,7 @@ public class MainMenu {
         subPopupOverlay.setBackground(new Color(50, 10, 10));
         subPopupOverlay.setBorder(BorderFactory.createLineBorder(Color.RED, 3));
 
-        JLabel msg = new JLabel("DELETE SAVE FILE?");
+        JLabel msg = new JLabel("DELETE SAVE FILE?", SwingConstants.CENTER);
         msg.setFont(new Font("Monospaced", Font.BOLD, 18));
         msg.setForeground(Color.WHITE);
         msg.setBounds(50, 30, 400, 30);
@@ -281,23 +289,30 @@ public class MainMenu {
     }
 
     public static void createNewGameInSlotFlow(int slotIndex, JPanel popupBox) {
+        DressUpScreen.equippedItems.clear();
         GameState.createNewGameInSlot(slotIndex);
 
         popupBox.removeAll();
 
-        JLabel madeLabel = new JLabel("SAVE FILE MADE");
+        JLabel madeLabel = new JLabel("SAVE FILE MADE", SwingConstants.CENTER);
         madeLabel.setFont(new Font("Monospaced", Font.BOLD, 36));
         madeLabel.setForeground(Color.GREEN);
         madeLabel.setBounds(100, 220, 500, 60);
+        popupBox.add(madeLabel);
 
         popupBox.revalidate();
         popupBox.repaint();
 
         Timer delayTimer = new Timer(1000, timerEvt -> {
             ((Timer)timerEvt.getSource()).stop();
-            Main.layeredPane.remove(popupOverlay);
-            popupOverlay = null;
-            GameScreen.startInGame();
+            if (popupOverlay != null) {
+                Main.layeredPane.remove(popupOverlay);
+                popupOverlay = null;
+            }
+            Main.layeredPane.revalidate();
+            Main.layeredPane.repaint();
+
+            DressUpScreen.startDressUpScene();
         });
         delayTimer.setRepeats(false);
         delayTimer.start();

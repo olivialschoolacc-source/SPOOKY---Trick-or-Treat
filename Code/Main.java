@@ -3,7 +3,6 @@ package Code;
 import javax.swing.*;
 
 public class Main {
-
     public static JFrame frame;
     public static JLayeredPane layeredPane;
 
@@ -22,9 +21,7 @@ public class Main {
         MainMenu.buildMainMenu();
         frame.setVisible(true);
         
-        Timer timer = new Timer (16, e -> {
-            // game loop logic goes here
-        });
+        Timer timer = new Timer(16, e -> {});
         timer.start();
     }
 }
